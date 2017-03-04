@@ -22,7 +22,7 @@ for line in lines:
     measurements.append(measurement)
 
 augmented_images, augmented_measurements = [], []
-for img, measurement in zip(imgs, measurement):
+for img, measurement in zip(imgs, measurements):
     augmented_images.append(img)
     augmented_measurements.append(measurement)
     augmented_images.append(cv2.flip(img,1))
