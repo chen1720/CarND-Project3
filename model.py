@@ -24,7 +24,6 @@ for line in lines:
     measurements.append(measurement)
 
 augmented_images, augmented_measurements = [], []
-print(current_path)
 
 for img, measurement in zip(imgs, measurements):
     augmented_images.append(img)
@@ -56,8 +55,8 @@ model.add(Dense(10))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
-#
-# history_object = model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=2, verbose=1)
+
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=2, verbose=1)
 # #
 # # ### print the keys contained in the history object
 # # print(history_object.history.keys())
