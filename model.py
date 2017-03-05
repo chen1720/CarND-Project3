@@ -55,18 +55,18 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-history_object = model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=5, verbose=1)
-
-### print the keys contained in the history object
-print(history_object.history.keys())
-
-### plot the training and validation loss for each epoch
-plt.plot(history_object.history['loss'])
-plt.plot(history_object.history['val_loss'])
-plt.title('model mean squared error loss')
-plt.ylabel('mean squared error loss')
-plt.xlabel('epoch')
-plt.legend(['training set', 'validation set'], loc='upper right')
-plt.show()
+history_object = model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=2, verbose=1)
+#
+# ### print the keys contained in the history object
+# print(history_object.history.keys())
+#
+# ### plot the training and validation loss for each epoch
+# plt.plot(history_object.history['loss'])
+# plt.plot(history_object.history['val_loss'])
+# plt.title('model mean squared error loss')
+# plt.ylabel('mean squared error loss')
+# plt.xlabel('epoch')
+# plt.legend(['training set', 'validation set'], loc='upper right')
+# plt.show()
 
 model.save('model.h5')
