@@ -15,47 +15,48 @@ def add_samples(csv_filepath, samples):
             samples.append(sample)
         return samples
 
-car_imgs = []
-steering_angles = []
-
 samples = add_samples('driving_log.csv', samples)
 samples = add_samples('driving_log_opposite.csv', samples)
 
 print("Samples: ",len(samples))
 
 def generator(samples, batch_size=32):
+    num_samples = len(samples)
+    while 1:
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            car_imgs = []
+            steering_angles = []
 
-    for line in samples:
-        current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + line[0].split('\\')[-1]
-        img_center = cv2.imread(current_path)
+            for batch_sample in batch_samples:
+                current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + batch_sample[0].split('\\')[-1]
+                img_center = cv2.imread(current_path)
+                current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + batch_sample[1].split('\\')[-1]
+                img_left = cv2.imread(current_path)
+                current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + batch_sample[2].split('\\')[-1]
+                img_right = cv2.imread(current_path)
 
-        current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + line[1].split('\\')[-1]
-        img_left = cv2.imread(current_path)
+                car_imgs.extend([img_center, img_left, img_right])
 
-        current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + line[2].split('\\')[-1]
-        img_right = cv2.imread(current_path)
+                steering_center = float(batch_sample[3])
+                correction = 0.2
+                steering_left =  steering_center + correction
+                steering_right = steering_center - correction
 
-        car_imgs.extend([img_center, img_left, img_right])
+                steering_angles.extend([steering_center, steering_left, steering_right])
 
-        steering_center = float(line[3])
+            augmented_images, augmented_measurements = [], []
 
-        correction = 0.2
-        steering_left =  steering_center + correction
-        steering_right = steering_center - correction
+            for img, measurement in zip(car_imgs, steering_angles):
+                augmented_images.append(img)
+                augmented_measurements.append(measurement)
+                augmented_images.append(cv2.flip(img,1))
+                augmented_measurements.append(measurement*-1.0)
 
-        steering_angles.extend([steering_center, steering_left, steering_right])
-
-    augmented_images, augmented_measurements = [], []
-
-    for img, measurement in zip(car_imgs, steering_angles):
-        augmented_images.append(img)
-        augmented_measurements.append(measurement)
-        augmented_images.append(cv2.flip(img,1))
-        augmented_measurements.append(measurement*-1.0)
-
-    X_train = np.array(augmented_images)
-    y_train = np.array(augmented_measurements)
-    yield shuffle(X_train, y_train)
+            X_train = np.array(augmented_images)
+            y_train = np.array(augmented_measurements)
+            yield shuffle(X_train, y_train)
 
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
