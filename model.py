@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
-
+from sklearn.model_selection import train_test_split
 
 samples = []
 
@@ -57,8 +57,13 @@ def generator(samples, batch_size=32):
     y_train = np.array(augmented_measurements)
     yield shuffle(X_train, y_train)
 
-X_train, y_train = generator(samples, batch_size=32)
-print("Training samples:", len(X_train))
+train_samples, validation_samples = train_test_split(samples, test_size=0.2)
+
+train_generator = generator(train_samples, batch_size=32)
+validation_generator = generator(validation_samples, batch_size=32)
+
+print("Training samples:", len(train_samples))
+print("Validation samples:", len(validation_samples))
 
 from keras.models import Sequential
 from keras.layers import Cropping2D
@@ -82,7 +87,9 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10 , verbose=1)
+model.fit_generator(train_generator, samples_per_epoch=len(train_samples),
+                    validation_data=validation_generator,
+                    nb_val_samples=len(validation_samples),nb_epoch=3)
 
 # #
 # # ### print the keys contained in the history object
