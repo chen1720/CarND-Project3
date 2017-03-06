@@ -11,21 +11,38 @@ with open('driving_log.csv') as csvfile:
     for line in reader:
         lines.append(line)
 
-imgs = []
-measurements = []
+car_imgs = []
+steering_angles = []
 
 for line in lines:
     source_path = line[0]
     filename = source_path.split('\\')[-1]
     current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + filename
-    img = cv2.imread(current_path)
-    imgs.append(img)
-    measurement = float(line[3])
-    measurements.append(measurement)
+    img_center = cv2.imread(current_path)
+
+    source_path = line[1]
+    filename = source_path.split('\\')[-1]
+    current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + filename
+    img_left = cv2.imread(current_path)
+
+    source_path = line[2]
+    filename = source_path.split('\\')[-1]
+    current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + filename
+    img_right = cv2.imread(current_path)
+
+    car_imgs.extend([img_center, img_left, img_right])
+
+    steering_center = float(line[3])
+
+    correction = 0.2
+    steering_left =  steering_center + correction
+    steering_right = steering_center - correction
+
+    steering_angles.extend([steering_center, steering_left, steering_right])
 
 augmented_images, augmented_measurements = [], []
 
-for img, measurement in zip(imgs, measurements):
+for img, measurement in zip(car_imgs, steering_angles):
     augmented_images.append(img)
     augmented_measurements.append(measurement)
     augmented_images.append(cv2.flip(img,1))
@@ -56,7 +73,7 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10, verbose=1)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10 , verbose=1)
 
 # #
 # # ### print the keys contained in the history object
