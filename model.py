@@ -40,7 +40,8 @@ def generator(samples, batch_size=32):
                 car_imgs.extend([img_center, img_left, img_right])
 
                 steering_center = float(batch_sample[3])
-                correction = 0.2
+
+                correction = 0.1
                 steering_left =  steering_center + correction
                 steering_right = steering_center - correction
 
@@ -59,10 +60,10 @@ print("Training samples:", len(train_samples))
 print("Validation samples:", len(validation_samples))
 
 from keras.models import Sequential
-from keras.layers import Cropping2D
+from keras.layers import Cropping2D, Dropout
 from keras.layers.core import Flatten, Dense, Lambda
 from keras.layers.convolutional import Convolution2D
-from keras.layers.pooling import MaxPooling2D
+from keras.optimizers import Adam
 
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
@@ -73,16 +74,17 @@ model.add(Convolution2D(48, 5, 5, subsample=(2,2), activation="relu"))
 model.add(Convolution2D(64, 3, 3, activation="relu"))
 model.add(Convolution2D(64, 3, 3, activation="relu"))
 model.add(Flatten())
+model.add(Dropout(.2))
 model.add(Dense(100))
+model.add(Dropout(.5))
 model.add(Dense(50))
 model.add(Dense(10))
 model.add(Dense(1))
 
+adam = Adam(lr=0.0001)
 model.compile(loss='mse', optimizer='adam')
 
-print("Model summary:\n", model.summary())
-
-model.fit_generator(train_generator, samples_per_epoch=len(train_samples),
+model.fit_generator(train_generator, samples_per_epoch=2880,
                     validation_data=validation_generator,
                     nb_val_samples=len(validation_samples),nb_epoch=20)
 
