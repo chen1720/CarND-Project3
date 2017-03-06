@@ -46,16 +46,8 @@ def generator(samples, batch_size=32):
 
                 steering_angles.extend([steering_center, steering_left, steering_right])
 
-            augmented_images, augmented_measurements = [], []
-
-            for img, measurement in zip(car_imgs, steering_angles):
-                augmented_images.append(img)
-                augmented_measurements.append(measurement)
-                augmented_images.append(cv2.flip(img,1))
-                augmented_measurements.append(measurement*-1.0)
-
-            X_train = np.array(augmented_images)
-            y_train = np.array(augmented_measurements)
+            X_train = np.array(car_imgs)
+            y_train = np.array(steering_angles)
             yield shuffle(X_train, y_train)
 
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
@@ -88,9 +80,11 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
+print("Model summary:\n", model.summary())
+
 model.fit_generator(train_generator, samples_per_epoch=len(train_samples),
                     validation_data=validation_generator,
-                    nb_val_samples=len(validation_samples),nb_epoch=3)
+                    nb_val_samples=len(validation_samples),nb_epoch=20)
 
 # #
 # # ### print the keys contained in the history object
@@ -106,3 +100,8 @@ model.fit_generator(train_generator, samples_per_epoch=len(train_samples),
 # # plt.show()
 #
 model.save('model.h5')
+model_json = model.to_json()
+with open("model.json","w") as json_file:
+    json_file.write(model_json)
+
+print("Model saved")
