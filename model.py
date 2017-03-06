@@ -3,53 +3,62 @@ import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 
 
-lines = []
-with open('driving_log.csv') as csvfile:
-    reader = csv.reader(csvfile)
-    for line in reader:
-        lines.append(line)
+samples = []
+
+def add_samples(csv_filepath, samples):
+    with open(csv_filepath) as csvfile:
+        reader = csv.reader(csvfile)
+        for sample in reader:
+            samples.append(sample)
+        return samples
 
 car_imgs = []
 steering_angles = []
 
-for line in lines:
-    source_path = line[0]
-    filename = source_path.split('\\')[-1]
-    current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + filename
-    img_center = cv2.imread(current_path)
+samples = add_samples('driving_log.csv', samples)
+samples = add_samples('driving_log_opposite.csv', samples)
 
-    source_path = line[1]
-    filename = source_path.split('\\')[-1]
-    current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + filename
-    img_left = cv2.imread(current_path)
+print("Samples: ",len(samples))
 
-    source_path = line[2]
-    filename = source_path.split('\\')[-1]
-    current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + filename
-    img_right = cv2.imread(current_path)
+def generator(samples, batch_size=32):
 
-    car_imgs.extend([img_center, img_left, img_right])
+    for line in samples:
+        current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + line[0].split('\\')[-1]
+        img_center = cv2.imread(current_path)
 
-    steering_center = float(line[3])
+        current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + line[1].split('\\')[-1]
+        img_left = cv2.imread(current_path)
 
-    correction = 0.2
-    steering_left =  steering_center + correction
-    steering_right = steering_center - correction
+        current_path = os.path.split(os.path.realpath(__file__))[0] + '/IMG/' + line[2].split('\\')[-1]
+        img_right = cv2.imread(current_path)
 
-    steering_angles.extend([steering_center, steering_left, steering_right])
+        car_imgs.extend([img_center, img_left, img_right])
 
-augmented_images, augmented_measurements = [], []
+        steering_center = float(line[3])
 
-for img, measurement in zip(car_imgs, steering_angles):
-    augmented_images.append(img)
-    augmented_measurements.append(measurement)
-    augmented_images.append(cv2.flip(img,1))
-    augmented_measurements.append(measurement*-1.0)
+        correction = 0.2
+        steering_left =  steering_center + correction
+        steering_right = steering_center - correction
 
-X_train = np.array(augmented_images)
-y_train = np.array(augmented_measurements)
+        steering_angles.extend([steering_center, steering_left, steering_right])
+
+    augmented_images, augmented_measurements = [], []
+
+    for img, measurement in zip(car_imgs, steering_angles):
+        augmented_images.append(img)
+        augmented_measurements.append(measurement)
+        augmented_images.append(cv2.flip(img,1))
+        augmented_measurements.append(measurement*-1.0)
+
+    X_train = np.array(augmented_images)
+    y_train = np.array(augmented_measurements)
+    yield shuffle(X_train, y_train)
+
+X_train, y_train = generator(samples)
+print("Training samples:", len(X_train))
 
 from keras.models import Sequential
 from keras.layers import Cropping2D
