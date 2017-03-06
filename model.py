@@ -57,7 +57,7 @@ def generator(samples, batch_size=32):
     y_train = np.array(augmented_measurements)
     yield shuffle(X_train, y_train)
 
-X_train, y_train = generator(samples)
+X_train, y_train = generator(samples, batch_size=32)
 print("Training samples:", len(X_train))
 
 from keras.models import Sequential
